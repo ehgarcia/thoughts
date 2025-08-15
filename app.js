@@ -158,8 +158,8 @@
     composerCard.dataset.openComposer = "";
     composerCard.innerHTML = `
       <span class="avatar"></span>
-      <span class="placeholder">¿Qué hay de nuevo?</span>
-      <button class="primary">Post</button>
+      <span class="placeholder">En que estas pensando....?</span>
+      <button class="primary">Publicar</button>
     `;
     ensureAvatar(composerCard.querySelector(".avatar"));
     feed.appendChild(composerCard);
@@ -168,8 +168,6 @@
       feed.appendChild(thoughtNode(r));
     }
   };
-
-  
 
   let composerParentId = null;
   const openComposer = (parentId = null) => {
