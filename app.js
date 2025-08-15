@@ -15,7 +15,7 @@
           "&": "&amp;",
           "<": "&lt;",
           ">": "&gt;",
-          '"': "&quot;",
+          "\"": "&quot;",
           "'": "&#39;",
         }[s])
     );
@@ -155,7 +155,7 @@
 
     const composerCard = document.createElement("li");
     composerCard.className = "card composer-prompt";
-    composerCard.dataset.openComposer = "";
+    composerCard.setAttribute("data-open-composer", "");
     composerCard.innerHTML = `
       <span class="avatar"></span>
       <span class="placeholder">En que estas pensando....?</span>
@@ -213,13 +213,6 @@
     profile = await Storage.getProfile().catch(() => null);
     ensureAvatar($("#avatarInlineImg") || document.createElement("span"));
 
-    $$(".nav-btn[data-open-composer]").forEach((el) => {
-      el.addEventListener("click", (e) => {
-        e.preventDefault();
-        openComposer();
-      });
-    });
-
     if ($("#composerForm")) {
       $("#composerForm").addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -236,7 +229,6 @@
         $("#charCount").textContent = v.length + "/500";
         $("#composerSubmit").disabled = v.trim().length === 0;
       });
-      $("[data-close-dialog]")?.addEventListener("click", closeComposer);
     }
   };
 
@@ -247,34 +239,26 @@
 
     feed.addEventListener("click", (e) => {
       const thoughtLi = e.target.closest("li.thought");
-      const actionBtn = e.target.closest("[data-action]");
-      const composerPrompt = e.target.closest(".composer-prompt");
-
-      if (composerPrompt) {
-        openComposer();
-        return;
-      }
-
       if (!thoughtLi) return;
-      const id = thoughtLi.dataset.id;
 
-      if (actionBtn) {
-        const action = actionBtn.dataset.action;
-        if (action === "reply") {
-          openComposer(id);
-        } else if (action === "collapse-toggle") {
-          const children = thoughtLi.querySelector(".children");
-          if (!children) return;
-          const isCollapsed = children.classList.toggle("collapsed");
-          thoughtLi.setAttribute("aria-expanded", !isCollapsed);
-          actionBtn.textContent = isCollapsed
-            ? "Expandir hilo"
-            : "Colapsar hilo";
-          actionBtn.setAttribute(
-            "aria-label",
-            isCollapsed ? "Expandir hilo" : "Colapsar hilo"
-          );
-        }
+      const actionBtn = e.target.closest("[data-action]");
+      if (!actionBtn) return;
+
+      const id = thoughtLi.dataset.id;
+      const action = actionBtn.dataset.action;
+
+      if (action === "reply") {
+        openComposer(id);
+      } else if (action === "collapse-toggle") {
+        const children = thoughtLi.querySelector(".children");
+        if (!children) return;
+        const isCollapsed = children.classList.toggle("collapsed");
+        thoughtLi.setAttribute("aria-expanded", !isCollapsed);
+        actionBtn.textContent = isCollapsed ? "Expandir hilo" : "Colapsar hilo";
+        actionBtn.setAttribute(
+          "aria-label",
+          isCollapsed ? "Expandir hilo" : "Colapsar hilo"
+        );
       }
     });
   };
@@ -299,10 +283,7 @@
       } para "${q}"`;
       noResults.hidden = found.length > 0;
 
-      const re = new RegExp(
-        "(" + q.replace(/[.*+?^${}()|[\\]/g, "\\$&") + ")",
-        "ig"
-      );
+      const re = new RegExp("(" + q.replace(/[.*+?^${}()|[\\]/g, "\\$&") + ")", "ig");
       for (const t of found) {
         const li = document.createElement("li");
         li.className = "card result-card";
@@ -342,7 +323,7 @@
       (el) => (el.checked = el.value === data.displayNamePref)
     );
 
-    const markDirty = () => ($("#saveProfile").disabled = false);
+    const markDirty = () => $("#saveProfile").disabled = false;
     $("#fullName").addEventListener("input", markDirty);
     $("#username").addEventListener("input", markDirty);
     $$("[name=displayNamePref]").forEach((el) =>
@@ -355,9 +336,7 @@
       const reader = new FileReader();
       reader.onload = () => {
         const url = reader.result;
-        $(
-          "#profileAvatarPreview"
-        ).style.background = `center/cover no-repeat url(${url})`;
+        $("#profileAvatarPreview").style.background = `center/cover no-repeat url(${url})`;
         $("#saveProfile").disabled = false;
         $("#saveProfile").dataset.avatar = url;
       };
@@ -398,6 +377,25 @@
   // Entrypoint
   document.addEventListener("DOMContentLoaded", async () => {
     await initCommon();
+
+    // Listener global para abrir el compositor
+    document.body.addEventListener("click", (e) => {
+      if (e.target.closest("[data-open-composer]")) {
+        e.preventDefault();
+        openComposer();
+      }
+    });
+
+    // Listener global para cerrar diálogos
+    document.body.addEventListener("click", (e) => {
+      if (e.target.matches("dialog")) {
+        e.target.close();
+      }
+    });
+    $("[data-close-dialog]")?.addEventListener("click", (e) =>
+      e.target.closest("dialog")?.close()
+    );
+
     const page = document.body.dataset.page;
     if (page === "index") await initIndex();
     if (page === "search") await initSearch();
