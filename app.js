@@ -69,7 +69,7 @@
   };
 
   const ensureAvatar = (el) => {
-    if (!profile) return;
+    if (!profile || !el) return;
     const url = profile.avatar;
     el.style.background = url
       ? `center/cover no-repeat url(${url})`
@@ -103,6 +103,7 @@
       profile?.displayNamePref === "username"
         ? profile?.fullName || "Usuario"
         : "@" + (profile?.username || "user");
+
     const time = document.createElement("span");
     time.className = "time";
     time.textContent = relativeTime(t.createdAt);
@@ -136,7 +137,6 @@
       ul.className = "children collapsed";
       ul.setAttribute("role", "group");
 
-      // botón para colapsar/expandir hilo
       const collapseBtn = document.createElement("button");
       collapseBtn.className = "action small";
       collapseBtn.dataset.action = "collapse-toggle";
@@ -157,7 +157,6 @@
 
   const renderFeed = async () => {
     const list = await Storage.loadAll();
-    // ordenar raíces por fecha desc
     buildIndex(list);
     const roots = (byParent.get(null) || [])
       .slice()
@@ -166,13 +165,12 @@
     if (!feed) return;
     feed.innerHTML = "";
 
-    // Tarjeta para componer un nuevo post
     const composerCard = document.createElement("li");
     composerCard.className = "card composer-prompt";
     composerCard.dataset.openComposer = "";
     composerCard.innerHTML = `
       <span class="avatar"></span>
-      <span class="placeholder">Que estas pensando...?</span>
+      <span class="placeholder">¿Qué hay de nuevo?</span>
       <button class="primary">Post</button>
     `;
     ensureAvatar(composerCard.querySelector(".avatar"));
@@ -183,12 +181,11 @@
     }
   };
 
-  // Toggle sin re-render total
   const toggleOne = async (id) => {
     await Storage.toggleHidden(id);
     const t = thoughtsIndex.get(id);
     if (!t) return;
-    t.hidden = !t.hidden; // actualizar cache local
+    t.hidden = !t.hidden;
     const content = $("#content-" + id);
     if (content) {
       if (t.hidden) {
@@ -208,14 +205,13 @@
     }
   };
 
-  // Composer
   let composerParentId = null;
   const openComposer = (parentId = null) => {
     composerParentId = parentId;
     const dlg = $("#composer");
+    ensureAvatar(dlg.querySelector(".avatar"));
     const ctx = $("#replyContext");
     if (parentId) {
-      // Render contexto (cadena de ancestros)
       const parts = [];
       let cur = thoughtsIndex.get(parentId);
       while (cur) {
@@ -251,18 +247,15 @@
   const initCommon = async () => {
     await Storage.init();
     profile = await Storage.getProfile().catch(() => null);
-    // avatar en UI
     ensureAvatar($("#avatarInlineImg") || document.createElement("span"));
 
-    // Abrir composer desde cualquier botón compatible
-    $$(".nav-btn[data-open-composer], [data-open-composer]").forEach((el) => {
+    $$(".nav-btn[data-open-composer]").forEach((el) => {
       el.addEventListener("click", (e) => {
         e.preventDefault();
         openComposer();
       });
     });
 
-    // dialog events
     if ($("#composerForm")) {
       $("#composerForm").addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -288,11 +281,10 @@
     const feed = $("#feed");
     if (!feed) return;
 
-    // Delegación de eventos para todo el feed
     feed.addEventListener("click", (e) => {
       const thoughtLi = e.target.closest("li.thought");
       const actionBtn = e.target.closest("[data-action]");
-      const composerPrompt = e.target.closest("[data-open-composer]");
+      const composerPrompt = e.target.closest(".composer-prompt");
 
       if (composerPrompt) {
         openComposer();
@@ -329,22 +321,24 @@
     const input = $("#searchInput");
     const results = $("#results");
     const summary = $("#searchSummary");
+    const noResults = $("#noResults");
+
     const doSearch = debounce(async () => {
       const q = input.value.trim();
-      if (!q) {
-        results.innerHTML = "";
-        summary.textContent = "";
-        return;
-      }
-      const found = await Storage.search(q);
-      summary.textContent =
-        found.length +
-        " resultado" +
-        (found.length === 1 ? "" : "s") +
-        ` para "${q}"`;
       results.innerHTML = "";
+      summary.textContent = "";
+      noResults.hidden = true;
+
+      if (!q) return;
+
+      const found = await Storage.search(q);
+      summary.textContent = `${found.length} resultado${
+        found.length === 1 ? "" : "s"
+      } para "${q}"`;
+      noResults.hidden = found.length > 0;
+
       const re = new RegExp(
-        "(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")",
+        "(" + q.replace(/[.*+?^${}()|[\\]/g, "\\$&") + ")",
         "ig"
       );
       for (const t of found) {
@@ -356,7 +350,7 @@
           <div class="thought-header">
             <span class="avatar"></span>
             <span class="user">${profile?.fullName || "Usuario"}</span>
-            <span class="username"> @${profile?.username || "user"}</span>
+            <span class="username">@${profile?.username || "user"}</span>
             <span class="time">${time}</span>
           </div>
           <div class="content">${content}</div>
@@ -365,6 +359,7 @@
         results.appendChild(li);
       }
     }, 250);
+
     input.addEventListener("input", doSearch);
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
@@ -381,15 +376,14 @@
     $("#username").value = data.username || "";
     ensureAvatar($("#profileAvatarPreview"));
 
-    // Setear preferencia de nombre
-    $("[name=displayNamePref]").forEach(
+    $$("[name=displayNamePref]").forEach(
       (el) => (el.checked = el.value === data.displayNamePref)
     );
 
     const markDirty = () => ($("#saveProfile").disabled = false);
     $("#fullName").addEventListener("input", markDirty);
     $("#username").addEventListener("input", markDirty);
-    $("[name=displayNamePref]").forEach((el) =>
+    $$("[name=displayNamePref]").forEach((el) =>
       el.addEventListener("change", markDirty)
     );
 
@@ -403,7 +397,7 @@
           "#profileAvatarPreview"
         ).style.background = `center/cover no-repeat url(${url})`;
         $("#saveProfile").disabled = false;
-        $("#saveProfile").dataset.avatar = url; // guardar temporal
+        $("#saveProfile").dataset.avatar = url;
       };
       reader.readAsDataURL(file);
     });
@@ -428,6 +422,15 @@
       e.target.removeAttribute("data-avatar");
       showToast("Perfil guardado");
     });
+
+    $("#resetData")?.addEventListener("click", async () => {
+      if (!confirm("¿Estás seguro de que quieres borrar todos los datos?"))
+        return;
+      localStorage.removeItem("thoughts.v1");
+      localStorage.removeItem("profile.v1");
+      await Storage.init();
+      location.href = "index.html";
+    });
   };
 
   // Entrypoint
@@ -438,15 +441,4 @@
     if (page === "search") await initSearch();
     if (page === "profile") await initProfile();
   });
-
-  // -------------------------
-  // PRUEBAS MANUALES (checklist)
-  // 1) Desde el botón "Post", el FAB o la caja superior se abre el mismo modal.
-  // 2) Escribir y publicar (<=500 chars) agrega un item en la parte superior del feed.
-  // 3) Presionar "Responder" en cualquier item abre el modal con contexto y crea una respuesta anidada.
-  // 4) "Ocultar" cambia el contenido por "Contenido oculto" y el botón pasa a "Mostrar" (sin re-render completo).
-  // 5) Ir a Buscar, escribir una palabra -> debounce 250 ms, resalta coincidencias.
-  // 6) Ir a Perfil, cambiar nombre/usuario, subir avatar 128x128 -> Guardar -> se actualiza el avatar en toda la app.
-  // 7) Borrar localStorage y recargar: se siembra estado inicial.
-  // -------------------------
 })();
