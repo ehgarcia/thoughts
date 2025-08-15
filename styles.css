@@ -45,9 +45,14 @@ body {
 }
 
 .logo a {
-  font-size: 28px;
   text-decoration: none;
   display: inline-block;
+}
+
+.logo img {
+  width: 54px;
+  height: 54px;
+  vertical-align: middle;
 }
 
 .nav {
