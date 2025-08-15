@@ -126,7 +126,6 @@
 
     /** Inicialización (si está vacío, siembra datos) */
     async init() {
-      seedIfEmpty();
       ensureProfile();
     },
 
