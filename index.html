@@ -54,18 +54,20 @@
   <!-- Composer modal -->
   <dialog id="composer" aria-labelledby="composerTitle">
     <form method="dialog" id="composerForm" class="composer-form">
-      <header class="composer-header" hidden>
-        <h2 id="composerTitle">Nuevo pensamiento</h2>
+      <header class="composer-header">
         <button type="button" class="ghost" data-close-dialog aria-label="Cerrar">✕</button>
-        </div>
-        <div id="replyContext" class="reply-context" hidden></div>
+      </header>
+      <div class="composer-body">
+        <span class="avatar"></span>
         <textarea id="composerInput" maxlength="500" placeholder="Escribe algo…"
           aria-label="Texto del pensamiento"></textarea>
-        <div class="toolbar">
-          <span id="charCount" class="muted">0/500</span>
-          <div class="spacer"></div>
-          <button type="submit" id="composerSubmit" class="primary" disabled>Publicar</button>
-        </div>
+      </div>
+      <div id="replyContext" class="reply-context" hidden></div>
+      <div class="toolbar">
+        <span id="charCount" class="muted">0/500</span>
+        <div class="spacer"></div>
+        <button type="submit" id="composerSubmit" class="primary" disabled>Publicar</button>
+      </div>
     </form>
   </dialog>
 

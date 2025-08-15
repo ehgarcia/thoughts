@@ -80,7 +80,6 @@
     const li = document.createElement("li");
     li.className = "thought";
     li.setAttribute("role", "treeitem");
-    li.setAttribute("aria-expanded", "true");
     li.dataset.id = t.id;
 
     const card = document.createElement("div");
@@ -126,22 +125,25 @@
 
     const children = byParent.get(t.id) || [];
     if (children.length) {
+      li.setAttribute("aria-expanded", "false");
       const ul = document.createElement("ul");
-      ul.className = "children";
+      ul.className = "children collapsed";
       ul.setAttribute("role", "group");
 
       // botón para colapsar/expandir hilo
       const collapseBtn = document.createElement("button");
       collapseBtn.className = "action small";
       collapseBtn.dataset.action = "collapse-toggle";
-      collapseBtn.setAttribute("aria-label", "Colapsar hilo");
-      collapseBtn.textContent = "Colapsar hilo";
+      collapseBtn.setAttribute("aria-label", "Expandir hilo");
+      collapseBtn.textContent = "Expandir hilo";
       actions.appendChild(collapseBtn);
 
       for (const child of children) {
         ul.appendChild(thoughtNode(child));
       }
       li.appendChild(ul);
+    } else {
+      li.setAttribute("aria-expanded", "true");
     }
 
     return li;
@@ -157,6 +159,19 @@
     const feed = $("#feed");
     if (!feed) return;
     feed.innerHTML = "";
+
+    // Tarjeta para componer un nuevo post
+    const composerCard = document.createElement("li");
+    composerCard.className = "card composer-prompt";
+    composerCard.dataset.openComposer = "";
+    composerCard.innerHTML = `
+      <span class="avatar"></span>
+      <span class="placeholder">Que estas pensando...?</span>
+      <button class="primary">Post</button>
+    `;
+    ensureAvatar(composerCard.querySelector(".avatar"));
+    feed.appendChild(composerCard);
+
     for (const r of roots) {
       feed.appendChild(thoughtNode(r));
     }
@@ -322,8 +337,8 @@
         li.innerHTML = `
           <div class="thought-header">
             <span class="avatar"></span>
-            <span class="user">${profile?.fullName || 'Usuario'}</span>
-            <span class="username"> @${profile?.username || 'user'}</span>
+            <span class="user">${profile?.fullName || "Usuario"}</span>
+            <span class="username"> @${profile?.username || "user"}</span>
             <span class="time">${time}</span>
           </div>
           <div class="content">${content}</div>

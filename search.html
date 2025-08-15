@@ -31,20 +31,17 @@
             d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5m0 2C7.58 14 4 16.24 4 19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1c0-2.76-3.58-5-8-5z" />
         </svg>
       </a>
-      <button class="nav-btn" data-open-composer aria-label="Nuevo pensamiento" title="Nuevo pensamiento">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M11 11V5a1 1 0 1 1 2 0v6h6a1 1 0 1 1 0 2h-6v6a1 1 0 1 1-2 0v-6H5a1 1 0 1 1 0-2h6z" />
-        </svg>
-      </button>
     </nav>
   </aside>
 
   <main class="main">
-    <div class="searchbar">
-      <input id="searchInput" type="search" placeholder="Buscar pensamientos…" aria-label="Buscar pensamientos" />
-    </div>
-    <p id="searchSummary" class="muted"></p>
-    <ul id="results" class="results"></ul>
+    <section>
+      <div class="searchbar">
+        <input id="searchInput" type="search" placeholder="Buscar pensamientos…" aria-label="Buscar pensamientos" />
+      </div>
+      <p id="searchSummary" class="muted"></p>
+      <ul id="results" class="results"></ul>
+    </section>
   </main>
 
   <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>

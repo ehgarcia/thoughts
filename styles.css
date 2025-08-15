@@ -182,7 +182,25 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px
+  gap: 10px;
+}
+
+.composer-prompt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.composer-prompt .placeholder {
+  flex: 1;
+  text-align: left;
+  color: var(--muted);
+  font-style: normal;
+}
+
+.composer-prompt:hover {
+  background: #f9fafb;
 }
 
 .card {
@@ -264,27 +282,35 @@ dialog {
   border: none;
   border-radius: 16px;
   padding: 0;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, .25);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
   max-width: 680px;
-  width: min(680px, 95%)
+  width: min(680px, 95%);
 }
 
 .composer-form {
-  padding: 14px
+  padding: 14px;
 }
 
 .composer-header {
   display: flex;
-  align-items: center
-}
-
-.composer-header h2 {
-  margin: 0;
-  font-size: 18px
+  padding: 4px 0 12px;
+  border-bottom: 1px solid var(--line);
 }
 
 .composer-header .ghost {
-  margin-left: auto
+  margin-left: auto;
+  border: none;
+  font-size: 18px;
+}
+
+.composer-body {
+  display: flex;
+  gap: 10px;
+  padding: 14px 0;
+}
+
+.composer-body .avatar {
+  flex-shrink: 0;
 }
 
 .reply-context {
@@ -293,17 +319,18 @@ dialog {
   border: 1px dashed var(--line);
   border-radius: 12px;
   padding: 8px;
-  margin: 6px 0 8px
+  margin: 6px 0 8px;
 }
 
 textarea {
   width: 100%;
   min-height: 110px;
   resize: vertical;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px;
-  font: inherit
+  border: none;
+  background: transparent;
+  padding: 6px 0;
+  font: inherit;
+  outline: none;
 }
 
 .toolbar {
