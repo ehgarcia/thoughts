@@ -97,18 +97,12 @@
       profile?.displayNamePref === "username"
         ? "@" + (profile?.username || "user")
         : profile?.fullName || "Usuario";
-    const username = document.createElement("span");
-    username.className = "username";
-    username.textContent =
-      profile?.displayNamePref === "username"
-        ? profile?.fullName || "Usuario"
-        : "@" + (profile?.username || "user");
 
     const time = document.createElement("span");
     time.className = "time";
     time.textContent = relativeTime(t.createdAt);
 
-    header.append(avatar, user, username, time);
+    header.append(avatar, user, time);
     card.appendChild(header);
 
     const content = document.createElement("div");
