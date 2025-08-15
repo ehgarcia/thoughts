@@ -84,8 +84,8 @@
       profileCache = {}; // Start fresh
     }
     if (!profileCache.fullName) {
-      profileCache.fullName = "Ezequiel Garcia";
-      profileCache.username = "zequegar";
+      profileCache.fullName = "Nombre y Apellido";
+      profileCache.username = "username";
       profileCache.avatar = null;
     }
     if (profileCache.displayNamePref === undefined) {
