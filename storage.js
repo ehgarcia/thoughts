@@ -2,7 +2,6 @@
 // Interfaz requerida (y extendida con perfil):
 // Storage.loadAll(): Thought[]
 // Storage.create(content, parentId = null): Thought
-// Storage.toggleHidden(id): void
 // Storage.search(query): Thought[]
 // Storage.init(): void
 // Extra para perfil: Storage.getProfile(), Storage.saveProfile(profile)
@@ -11,7 +10,7 @@
   const THOUGHTS_KEY = "thoughts.v1";
   const PROFILE_KEY = "profile.v1";
 
-  /** @typedef {{id:string,parentId:string|null,content:string,hidden:boolean,createdAt:number}} Thought */
+  /** @typedef {{id:string,parentId:string|null,content:string,createdAt:number}} Thought */
 
   const readJSON = (k, fallback) => {
     try {
@@ -45,7 +44,6 @@
         parentId: null,
         content:
           "Un comienzo, no es un buen comienzo, sino hay un comienzo primero. 😄",
-        hidden: false,
         createdAt: now - 24 * 60 * 60 * 1000,
       },
       {
@@ -53,7 +51,6 @@
         parentId: null,
         content:
           "Sin dudas, a esta app le falta un montón, pero es un buen comienzo.",
-        hidden: false,
         createdAt: now - 20 * 60 * 60 * 1000,
       },
       {
@@ -61,7 +58,6 @@
         parentId: null,
         content:
           "Ideas para hoy: 1) Arreglar estilos 2) Hacer búsquedas 3) Tomar mate.",
-        hidden: false,
         createdAt: now - 7 * 60 * 60 * 1000,
       },
     ];
@@ -70,14 +66,12 @@
         id: id(),
         parentId: roots[0].id,
         content: "Totalmente de acuerdo 👏",
-        hidden: false,
         createdAt: now - 23 * 60 * 60 * 1000,
       },
       {
         id: id(),
         parentId: roots[1].id,
         content: "Le falta, pero va queriendo.",
-        hidden: false,
         createdAt: now - 19 * 60 * 60 * 1000,
       },
     ];
@@ -112,20 +106,11 @@
         id: id(),
         parentId: parentId ?? null,
         content: String(content),
-        hidden: false,
         createdAt: Date.now(),
       };
       cache.push(t);
       writeJSON(THOUGHTS_KEY, cache);
       return t;
-    },
-
-    /** Toggle hidden */
-    async toggleHidden(id) {
-      const t = cache.find((x) => x.id === id);
-      if (!t) return;
-      t.hidden = !t.hidden;
-      writeJSON(THOUGHTS_KEY, cache);
     },
 
     /** Búsqueda por contenido (insensible a mayúsculas) */

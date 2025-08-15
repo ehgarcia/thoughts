@@ -107,8 +107,7 @@
 
     const content = document.createElement("div");
     content.className = "content";
-    content.innerText = t.hidden ? "Contenido oculto" : t.content;
-    if (t.hidden) content.classList.add("placeholder");
+    content.innerText = t.content;
     content.id = `content-${t.id}`;
     card.appendChild(content);
 
@@ -116,11 +115,6 @@
     actions.className = "actions";
     actions.innerHTML = `
       <button class="action" data-action="reply" aria-label="Responder">Responder</button>
-      <button class="action" data-action="toggle-hidden" aria-label="${
-        t.hidden ? "Mostrar" : "Ocultar"
-      }">
-        ${t.hidden ? "Mostrar" : "Ocultar"}
-      </button>
     `;
     card.appendChild(actions);
 
@@ -175,29 +169,7 @@
     }
   };
 
-  const toggleOne = async (id) => {
-    await Storage.toggleHidden(id);
-    const t = thoughtsIndex.get(id);
-    if (!t) return;
-    t.hidden = !t.hidden;
-    const content = $("#content-" + id);
-    if (content) {
-      if (t.hidden) {
-        content.innerText = "Contenido oculto";
-        content.classList.add("placeholder");
-      } else {
-        content.innerText = t.content;
-        content.classList.remove("placeholder");
-      }
-    }
-    const btn = document.querySelector(
-      `li[data-id="${id}"] [data-action="toggle-hidden"]`
-    );
-    if (btn) {
-      btn.textContent = t.hidden ? "Mostrar" : "Ocultar";
-      btn.setAttribute("aria-label", t.hidden ? "Mostrar" : "Ocultar");
-    }
-  };
+  
 
   let composerParentId = null;
   const openComposer = (parentId = null) => {
@@ -290,9 +262,7 @@
 
       if (actionBtn) {
         const action = actionBtn.dataset.action;
-        if (action === "toggle-hidden") {
-          toggleOne(id);
-        } else if (action === "reply") {
+        if (action === "reply") {
           openComposer(id);
         } else if (action === "collapse-toggle") {
           const children = thoughtLi.querySelector(".children");
