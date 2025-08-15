@@ -36,11 +36,15 @@
 
   <main class="main">
     <section>
+      <h1 class="h3">Buscar</h1>
       <div class="searchbar">
-        <input id="searchInput" type="search" placeholder="Buscar pensamientos…" aria-label="Buscar pensamientos" />
+        <input id="searchInput" type="search" placeholder="Escribe para buscar..." aria-label="Buscar pensamientos" />
       </div>
       <p id="searchSummary" class="muted"></p>
       <ul id="results" class="results"></ul>
+      <div id="noResults" class="placeholder-container" hidden>
+        <p>No se encontraron resultados.</p>
+      </div>
     </section>
   </main>
 
@@ -48,21 +52,6 @@
 
   <script src="storage.js"></script>
   <script src="app.js"></script>
-
-  <button class="hamburger" id="hamburgerBtn" aria-label="Menú">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
-    </svg>
-  </button>
-
-  <dialog id="menuSheet" class="sheet" aria-labelledby="menuTitle">
-    <div class="sheet-body">
-      <h2 id="menuTitle" class="h3">Menú</h2>
-      <a class="sheet-item" href="profile.html">Perfil</a>
-      <button class="sheet-item" id="resetData">Reiniciar datos</button>
-      <button class="sheet-close" data-close-dialog>Cerrar</button>
-    </div>
-  </dialog>
 
 </body>
 

@@ -36,37 +36,59 @@
 
   <main class="main">
     <section class="profile-card">
-      <header class="profile-header">
-        <span class="avatar avatar-xl" id="profileAvatarPreview" aria-hidden="true"></span>
-        <div class="profile-title">
-          <h1 class="h3" id="profileFullnameHeading">Tu perfil</h1>
-          <p class="muted">Personaliza tu información y avatar</p>
-        </div>
-      </header>
-
       <form id="profileForm" class="profile-form" novalidate>
-        <label>Nombre completo
-          <input id="fullName" type="text" placeholder="Nombre y apellido" maxlength="60" />
-        </label>
+        <header class="profile-header">
+          <span class="avatar avatar-xl" id="profileAvatarPreview" aria-hidden="true"></span>
+          <div class="profile-title">
+            <h1 class="h3">Tu Perfil</h1>
+            <p class="muted">Personaliza tu información y avatar</p>
+          </div>
+        </header>
 
-        <label>Nombre de usuario
-          <input id="username" type="text" placeholder="usuario" maxlength="24" />
-        </label>
+        <fieldset>
+          <legend>Datos Personales</legend>
+          <div class="form-row">
+            <label for="fullName">Nombre completo</label>
+            <input id="fullName" type="text" placeholder="Nombre y apellido" maxlength="60" />
+          </div>
+          <div class="form-row">
+            <label for="username">Nombre de usuario</label>
+            <input id="username" type="text" placeholder="usuario" maxlength="24" />
+          </div>
+        </fieldset>
 
-        <fieldset class="avatar-fieldset">
+        <fieldset>
           <legend>Avatar</legend>
           <div class="upload-row">
             <label class="file-input">
               <input id="avatarFile" type="file" accept="image/*" aria-label="Subir imagen de avatar" />
               <span>Subir imagen…</span>
             </label>
-            <span class="muted small">Recomendado: 128×128 px. PNG o JPG.</span>
+            <span class="muted small">Recomendado: 128×128 px</span>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Preferencias</legend>
+          <div class="form-row">
+            <label>Mostrar en publicaciones</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="displayNamePref" value="fullName" checked />
+                <span>Nombre completo</span>
+              </label>
+              <label>
+                <input type="radio" name="displayNamePref" value="username" />
+                <span>Usuario</span>
+              </label>
+            </div>
           </div>
         </fieldset>
 
         <div class="toolbar">
+          <button type="button" id="resetData" class="ghost danger">Reiniciar Datos</button>
           <div class="spacer"></div>
-          <button class="primary" id="saveProfile" disabled>Guardar cambios</button>
+          <button class="primary" id="saveProfile" disabled>Guardar Cambios</button>
         </div>
       </form>
     </section>
@@ -76,21 +98,6 @@
 
   <script src="storage.js"></script>
   <script src="app.js"></script>
-
-  <button class="hamburger" id="hamburgerBtn" aria-label="Menú">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
-    </svg>
-  </button>
-
-  <dialog id="menuSheet" class="sheet" aria-labelledby="menuTitle">
-    <div class="sheet-body">
-      <h2 id="menuTitle" class="h3">Menú</h2>
-      <a class="sheet-item" href="profile.html">Perfil</a>
-      <button class="sheet-item" id="resetData">Reiniciar datos</button>
-      <button class="sheet-close" data-close-dialog>Cerrar</button>
-    </div>
-  </dialog>
 
 </body>
 

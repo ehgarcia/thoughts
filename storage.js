@@ -87,13 +87,17 @@
 
   function ensureProfile() {
     if (!profileCache) {
-      profileCache = {
-        fullName: "Ezequiel Garcia",
-        username: "zequegar",
-        avatar: null,
-      };
-      writeJSON(PROFILE_KEY, profileCache);
+      profileCache = {}; // Start fresh
     }
+    if (!profileCache.fullName) {
+      profileCache.fullName = "Ezequiel Garcia";
+      profileCache.username = "zequegar";
+      profileCache.avatar = null;
+    }
+    if (profileCache.displayNamePref === undefined) {
+      profileCache.displayNamePref = "fullName"; // 'fullName' or 'username'
+    }
+    writeJSON(PROFILE_KEY, profileCache);
   }
 
   const Storage = {

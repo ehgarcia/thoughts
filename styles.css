@@ -31,6 +31,9 @@ body {
 /* Sidebar */
 .sidebar {
   width: 76px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
   border-right: 1px solid var(--line);
   padding: 14px 10px;
   display: flex;
@@ -39,17 +42,23 @@ body {
   gap: 18px;
 }
 
+.logo {
+  flex-shrink: 0;
+}
+
 .logo a {
   font-size: 28px;
   text-decoration: none;
-  display: inline-block
+  display: inline-block;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 10px
+  flex: 1;
+  justify-content: center;
+  /* Centrado vertical */
 }
 
 .nav-btn {
@@ -293,8 +302,18 @@ dialog {
 
 .composer-header {
   display: flex;
+  align-items: center;
   padding: 4px 0 12px;
   border-bottom: 1px solid var(--line);
+}
+
+.composer-header h2 {
+  margin: 0;
+  font-size: 18px;
+  flex: 1;
+  text-align: left;
+  padding-left: 30px;
+  /* balance for close button */
 }
 
 .composer-header .ghost {
@@ -362,7 +381,10 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 10px 14px;
-  margin-bottom: 10px
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .searchbar input {
@@ -370,7 +392,13 @@ textarea {
   border: none;
   outline: none;
   background: transparent;
-  font-size: 16px
+  font-size: 16px;
+}
+
+.placeholder-container {
+  text-align: center;
+  padding: 40px;
+  color: var(--muted);
 }
 
 /* Profile */
@@ -378,31 +406,57 @@ textarea {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 12px;
-  max-width: 760px
+  padding: 24px;
+  max-width: 760px;
 }
 
 .profile-header {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
-  margin: 6px 0 14px
+  margin-bottom: 24px;
 }
 
-.profile-form {
-  display: grid;
-  gap: 12px
+.profile-form fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 24px;
 }
 
-.profile-form label {
+.profile-form legend {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.form-row {
   display: grid;
-  gap: 6px
+  grid-template-columns: 140px 1fr;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
 .profile-form input[type="text"] {
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 10px
+  padding: 10px;
+  width: 100%;
+}
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
 }
 
 .file-input {
@@ -411,17 +465,22 @@ textarea {
   border-radius: 10px;
   padding: 8px 12px;
   background: #fafafa;
-  cursor: pointer
+  cursor: pointer;
 }
 
 .upload-row {
   display: flex;
   align-items: center;
-  gap: 10px
+  gap: 10px;
 }
 
-.avatar-fieldset legend {
-  font-weight: 600
+.ghost.danger {
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+.ghost.danger:hover {
+  background: #fef2f2;
 }
 
 /* Results list */

@@ -93,10 +93,16 @@
     ensureAvatar(avatar);
     const user = document.createElement("span");
     user.className = "user";
-    user.textContent = profile?.fullName || "Usuario";
+    user.textContent =
+      profile?.displayNamePref === "username"
+        ? "@" + (profile?.username || "user")
+        : profile?.fullName || "Usuario";
     const username = document.createElement("span");
     username.className = "username";
-    username.textContent = " @" + (profile?.username || "user");
+    username.textContent =
+      profile?.displayNamePref === "username"
+        ? profile?.fullName || "Usuario"
+        : "@" + (profile?.username || "user");
     const time = document.createElement("span");
     time.className = "time";
     time.textContent = relativeTime(t.createdAt);
@@ -281,28 +287,40 @@
     await renderFeed();
     const feed = $("#feed");
     if (!feed) return;
-    // delegación
+
+    // Delegación de eventos para todo el feed
     feed.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-action]");
-      if (!btn) return;
-      const li = e.target.closest("li.thought");
-      if (!li) return;
-      const id = li.dataset.id;
-      const action = btn.dataset.action;
-      if (action === "toggle-hidden") {
-        toggleOne(id);
-      } else if (action === "reply") {
-        openComposer(id);
-      } else if (action === "collapse-toggle") {
-        const children = li.querySelector(".children");
-        if (!children) return;
-        const isCollapsed = children.classList.toggle("collapsed");
-        li.setAttribute("aria-expanded", !isCollapsed);
-        btn.textContent = isCollapsed ? "Expandir hilo" : "Colapsar hilo";
-        btn.setAttribute(
-          "aria-label",
-          isCollapsed ? "Expandir hilo" : "Colapsar hilo"
-        );
+      const thoughtLi = e.target.closest("li.thought");
+      const actionBtn = e.target.closest("[data-action]");
+      const composerPrompt = e.target.closest("[data-open-composer]");
+
+      if (composerPrompt) {
+        openComposer();
+        return;
+      }
+
+      if (!thoughtLi) return;
+      const id = thoughtLi.dataset.id;
+
+      if (actionBtn) {
+        const action = actionBtn.dataset.action;
+        if (action === "toggle-hidden") {
+          toggleOne(id);
+        } else if (action === "reply") {
+          openComposer(id);
+        } else if (action === "collapse-toggle") {
+          const children = thoughtLi.querySelector(".children");
+          if (!children) return;
+          const isCollapsed = children.classList.toggle("collapsed");
+          thoughtLi.setAttribute("aria-expanded", !isCollapsed);
+          actionBtn.textContent = isCollapsed
+            ? "Expandir hilo"
+            : "Colapsar hilo";
+          actionBtn.setAttribute(
+            "aria-label",
+            isCollapsed ? "Expandir hilo" : "Colapsar hilo"
+          );
+        }
       }
     });
   };
@@ -363,9 +381,17 @@
     $("#username").value = data.username || "";
     ensureAvatar($("#profileAvatarPreview"));
 
+    // Setear preferencia de nombre
+    $("[name=displayNamePref]").forEach(
+      (el) => (el.checked = el.value === data.displayNamePref)
+    );
+
     const markDirty = () => ($("#saveProfile").disabled = false);
     $("#fullName").addEventListener("input", markDirty);
     $("#username").addEventListener("input", markDirty);
+    $("[name=displayNamePref]").forEach((el) =>
+      el.addEventListener("change", markDirty)
+    );
 
     $("#avatarFile").addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
@@ -375,7 +401,7 @@
         const url = reader.result;
         $(
           "#profileAvatarPreview"
-        ).style.background = `center/cover no-repeat url(\${url})`;
+        ).style.background = `center/cover no-repeat url(${url})`;
         $("#saveProfile").disabled = false;
         $("#saveProfile").dataset.avatar = url; // guardar temporal
       };
@@ -389,6 +415,8 @@
         username:
           $("#username").value.trim().slice(0, 24).replace(/\s+/g, "_") ||
           "user",
+        displayNamePref:
+          $("[name=displayNamePref]:checked").value || "fullName",
       };
       const newAvatar = e.target.dataset.avatar;
       if (newAvatar) patch.avatar = newAvatar;
@@ -401,25 +429,6 @@
       showToast("Perfil guardado");
     });
   };
-
-  // Menú hamburguesa
-  const menu = $("#menuSheet");
-  $("#hamburgerBtn")?.addEventListener("click", () => {
-    if (typeof menu.showModal === "function") menu.showModal();
-    else menu.setAttribute("open", "");
-  });
-  menu?.addEventListener("click", (e) => {
-    if (e.target.dataset.closeDialog !== undefined || e.target === menu) {
-      if (typeof menu.close === "function") menu.close();
-      else menu.removeAttribute("open");
-    }
-  });
-  $("#resetData")?.addEventListener("click", async () => {
-    localStorage.removeItem("thoughts.v1");
-    localStorage.removeItem("profile.v1");
-    await Storage.init();
-    location.href = "index.html";
-  });
 
   // Entrypoint
   document.addEventListener("DOMContentLoaded", async () => {
