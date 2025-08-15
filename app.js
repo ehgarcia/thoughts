@@ -278,6 +278,16 @@
         toggleOne(id);
       } else if (action === "reply") {
         openComposer(id);
+      } else if (action === "collapse-toggle") {
+        const children = li.querySelector(".children");
+        if (!children) return;
+        const isCollapsed = children.classList.toggle("collapsed");
+        li.setAttribute("aria-expanded", !isCollapsed);
+        btn.textContent = isCollapsed ? "Expandir hilo" : "Colapsar hilo";
+        btn.setAttribute(
+          "aria-label",
+          isCollapsed ? "Expandir hilo" : "Colapsar hilo"
+        );
       }
     });
   };
@@ -312,11 +322,11 @@
         li.innerHTML = `
           <div class="thought-header">
             <span class="avatar"></span>
-            <span class="user">\${profile?.fullName || 'Usuario'}</span>
-            <span class="username"> @\${profile?.username || 'user'}</span>
-            <span class="time">\${time}</span>
+            <span class="user">${profile?.fullName || 'Usuario'}</span>
+            <span class="username"> @${profile?.username || 'user'}</span>
+            <span class="time">${time}</span>
           </div>
-          <div class="content">\${content}</div>
+          <div class="content">${content}</div>
         `;
         ensureAvatar(li.querySelector(".avatar"));
         results.appendChild(li);
