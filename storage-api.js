@@ -3,16 +3,16 @@
   const API_URL = '/api'; // La URL base de nuestra API
 
   const Storage = {
-    async loadAll() {
-      const res = await fetch(`${API_URL}/thoughts`);
+    async loadAll(wallId = 'main') {
+      const res = await fetch(`${API_URL}/thoughts?wallId=${wallId}`);
       return res.json();
     },
 
-    async create(content, parentId = null) {
+    async create(content, parentId = null, isTrash = false, wallId = 'main') {
       const res = await fetch(`${API_URL}/thoughts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, parentId }),
+        body: JSON.stringify({ content, parentId, isTrash, wallId }),
       });
       return res.json();
     },
@@ -40,9 +40,23 @@
         body: JSON.stringify(patch),
       });
     },
-    
+
+    async getWalls() {
+      const res = await fetch(`${API_URL}/walls`);
+      return res.json();
+    },
+
+    async createWall(name) {
+      const res = await fetch(`${API_URL}/walls`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      return res.json();
+    },
+
     // La función init ya no es necesaria, el backend se encarga.
-    async init() {} 
+    async init() {}
   };
 
   window.Storage = Storage;

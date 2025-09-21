@@ -1,8 +1,4 @@
 // app.js — Lógica de UI (sin frameworks).
-// NOTA: Esta UI usa la capa de datos Storage (storage.js).
-// Si en el futuro querés migrar a una API REST, mantené el contrato de Storage
-// y no tenés que tocar nada de la UI.
-
 (function () {
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
@@ -54,6 +50,7 @@
   let thoughtsIndex = new Map(); // id -> thought
   let byParent = new Map(); // parentId -> Thought[]
   let profile = null;
+  let currentWallId = 'main';
 
   // Render helpers
   const buildIndex = (list) => {
@@ -144,7 +141,7 @@
   };
 
   const renderFeed = async () => {
-    const list = await Storage.loadAll();
+    const list = await Storage.loadAll(currentWallId);
     buildIndex(list);
     const roots = (byParent.get(null) || [])
       .slice()
@@ -170,7 +167,10 @@
   };
 
   let composerParentId = null;
-  const openComposer = (parentId = null) => {
+  let isTrashComposer = false;
+
+  const openComposer = (parentId = null, isTrash = false) => {
+    isTrashComposer = isTrash;
     composerParentId = parentId;
     const dlg = $("#composer");
     ensureAvatar(dlg.querySelector(".avatar"));
@@ -195,8 +195,14 @@
       ctx.hidden = true;
       ctx.innerHTML = "";
     }
+
+    const title = isTrash ? "Pensamiento Basura" : "Nuevo Pensamiento";
+    const maxLength = isTrash ? 100 : 500;
+    $("#composerTitle").textContent = title;
+    $("#composerInput").maxLength = maxLength;
+    $("#charCount").textContent = `0/${maxLength}`;
+
     $("#composerInput").value = "";
-    $("#charCount").textContent = "0/500";
     $("#composerSubmit").disabled = true;
     if (typeof dlg.showModal === "function") dlg.showModal();
     else dlg.setAttribute("open", "");
@@ -213,20 +219,27 @@
     profile = await Storage.getProfile().catch(() => null);
     ensureAvatar($("#avatarInlineImg") || document.createElement("span"));
 
+    const urlParams = new URLSearchParams(window.location.search);
+    currentWallId = urlParams.get('wallId') || 'main';
+
     if ($("#composerForm")) {
       $("#composerForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const raw = $("#composerInput").value.trim();
-        const content = escapeHtml(raw).slice(0, 500);
+        const maxLength = isTrashComposer ? 100 : 500;
+        const content = escapeHtml(raw).slice(0, maxLength);
         if (!content) return;
-        await Storage.create(content, composerParentId);
+        await Storage.create(content, composerParentId, isTrashComposer, currentWallId);
         closeComposer();
         showToast("¡Publicado!");
-        renderFeed();
+        if (document.body.dataset.page === "index") {
+          renderFeed();
+        }
       });
       $("#composerInput").addEventListener("input", (e) => {
-        const v = e.target.value.slice(0, 500);
-        $("#charCount").textContent = v.length + "/500";
+        const maxLength = isTrashComposer ? 100 : 500;
+        const v = e.target.value.slice(0, maxLength);
+        $("#charCount").textContent = `${v.length}/${maxLength}`;
         $("#composerSubmit").disabled = v.trim().length === 0;
       });
     }
@@ -374,6 +387,37 @@
     });
   };
 
+  const initWalls = async () => {
+    const wallList = $("#wallList");
+    const newWallInput = $("#newWallInput");
+    const addWallBtn = $("#addWallBtn");
+
+    const renderWalls = async () => {
+      const walls = await Storage.getWalls();
+      wallList.innerHTML = "";
+      walls.forEach(wall => {
+        const li = document.createElement("li");
+        li.className = "wall-card";
+        li.textContent = wall.name;
+        li.addEventListener("click", () => {
+          window.location.href = `index.html?wallId=${wall.id}`;
+        });
+        wallList.appendChild(li);
+      });
+    };
+
+    addWallBtn.addEventListener("click", async () => {
+      const wallName = newWallInput.value.trim();
+      if (wallName) {
+        await Storage.createWall(wallName);
+        newWallInput.value = "";
+        renderWalls();
+      }
+    });
+
+    renderWalls();
+  };
+
   // Entrypoint
   document.addEventListener("DOMContentLoaded", async () => {
     await initCommon();
@@ -383,6 +427,10 @@
       if (e.target.closest("[data-open-composer]")) {
         e.preventDefault();
         openComposer();
+      }
+      if (e.target.closest("[data-open-trash-composer]")) {
+        e.preventDefault();
+        openComposer(null, true);
       }
     });
 
@@ -400,5 +448,6 @@
     if (page === "index") await initIndex();
     if (page === "search") await initSearch();
     if (page === "profile") await initProfile();
+    if (page === "walls") await initWalls();
   });
 })();
