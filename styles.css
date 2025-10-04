@@ -1,3 +1,19 @@
+/* Tabler Icons en menú */
+.icon-tabler {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  vertical-align: middle;
+  stroke: var(--text);
+  fill: none;
+}
+
+.nav-btn img.icon-tabler {
+  filter: none;
+  margin: 0;
+  padding: 0;
+}
+
 /* Reset y tokens */
 :root {
   --bg: #f6f7f8;
@@ -79,7 +95,7 @@ body {
 .nav-btn svg {
   width: 22px;
   height: 22px;
-  fill: var(--text)
+  fill: var(--text);
 }
 
 .nav-btn.is-active {
@@ -574,4 +590,54 @@ textarea {
 .action.small {
   font-size: 12px;
   padding: 4px 8px
+}
+
+/* Nuevos estilos para Muros */
+.wall-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+#newWallInput {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.wall-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.wall-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.wall-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para el nuevo FAB de trash */
+.fab-secondary {
+  right: 24px;
+  bottom: 92px;
+  background: #dc2626;
+}
+
+.fab-secondary img {
+  width: 24px;
+  height: 24px;
+  filter: invert(1);
 }

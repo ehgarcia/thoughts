@@ -1,8 +1,4 @@
 // app.js — Lógica de UI (sin frameworks).
-// NOTA: Esta UI usa la capa de datos Storage (storage.js).
-// Si en el futuro querés migrar a una API REST, mantené el contrato de Storage
-// y no tenés que tocar nada de la UI.
-
 (function () {
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
@@ -54,6 +50,13 @@
   let thoughtsIndex = new Map(); // id -> thought
   let byParent = new Map(); // parentId -> Thought[]
   let profile = null;
+  let currentWallId = 'main';
+  // Scroll infinito
+  let feedSkip = 0;
+  const feedLimit = 30;
+  let feedLoading = false;
+  let feedDone = false;
+  let feedList = [];
 
   // Render helpers
   const buildIndex = (list) => {
@@ -144,33 +147,50 @@
   };
 
   const renderFeed = async () => {
-    const list = await Storage.loadAll();
-    buildIndex(list);
+    if (feedLoading || feedDone) return;
+    feedLoading = true;
+    const feed = $("#feed");
+    if (!feed) return;
+    if (feedSkip === 0) {
+      feed.innerHTML = "";
+      feedList = [];
+      feedDone = false;
+      // Composer card solo al inicio
+      const composerCard = document.createElement("li");
+      composerCard.className = "card composer-prompt";
+      composerCard.setAttribute("data-open-composer", "");
+      composerCard.innerHTML = `
+        <span class="avatar"></span>
+        <span class="placeholder">En que estas pensando....?</span>
+        <button class="primary">Publicar</button>
+      `;
+      ensureAvatar(composerCard.querySelector(".avatar"));
+      feed.appendChild(composerCard);
+    }
+    // Cargar lote
+    const list = await Storage.loadAll(currentWallId, feedLimit, feedSkip);
+    if (list.length < feedLimit) feedDone = true;
+    feedSkip += list.length;
+    feedList = feedList.concat(list);
+    buildIndex(feedList);
     const roots = (byParent.get(null) || [])
       .slice()
       .sort((a, b) => b.createdAt - a.createdAt);
-    const feed = $("#feed");
-    if (!feed) return;
-    feed.innerHTML = "";
-
-    const composerCard = document.createElement("li");
-    composerCard.className = "card composer-prompt";
-    composerCard.setAttribute("data-open-composer", "");
-    composerCard.innerHTML = `
-      <span class="avatar"></span>
-      <span class="placeholder">En que estas pensando....?</span>
-      <button class="primary">Publicar</button>
-    `;
-    ensureAvatar(composerCard.querySelector(".avatar"));
-    feed.appendChild(composerCard);
-
+    // Evitar duplicados
+    const renderedIds = new Set(Array.from(feed.querySelectorAll("li.thought")).map(li => li.dataset.id));
     for (const r of roots) {
-      feed.appendChild(thoughtNode(r));
+      if (!renderedIds.has(r.id)) {
+        feed.appendChild(thoughtNode(r));
+      }
     }
+    feedLoading = false;
   };
 
   let composerParentId = null;
-  const openComposer = (parentId = null) => {
+  let isTrashComposer = false;
+
+  const openComposer = (parentId = null, isTrash = false) => {
+    isTrashComposer = isTrash;
     composerParentId = parentId;
     const dlg = $("#composer");
     ensureAvatar(dlg.querySelector(".avatar"));
@@ -195,8 +215,14 @@
       ctx.hidden = true;
       ctx.innerHTML = "";
     }
+
+    const title = isTrash ? "Pensamiento Basura" : "Nuevo Pensamiento";
+    const maxLength = isTrash ? 100 : 500;
+    $("#composerTitle").textContent = title;
+    $("#composerInput").maxLength = maxLength;
+    $("#charCount").textContent = `0/${maxLength}`;
+
     $("#composerInput").value = "";
-    $("#charCount").textContent = "0/500";
     $("#composerSubmit").disabled = true;
     if (typeof dlg.showModal === "function") dlg.showModal();
     else dlg.setAttribute("open", "");
@@ -213,26 +239,65 @@
     profile = await Storage.getProfile().catch(() => null);
     ensureAvatar($("#avatarInlineImg") || document.createElement("span"));
 
+    const urlParams = new URLSearchParams(window.location.search);
+    currentWallId = urlParams.get('wallId') || 'main';
+
     if ($("#composerForm")) {
       $("#composerForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const raw = $("#composerInput").value.trim();
-        const content = escapeHtml(raw).slice(0, 500);
+        const maxLength = isTrashComposer ? 100 : 500;
+        const content = escapeHtml(raw).slice(0, maxLength);
         if (!content) return;
-        await Storage.create(content, composerParentId);
+        const thought = await Storage.create(content, composerParentId, isTrashComposer, currentWallId);
         closeComposer();
         showToast("¡Publicado!");
-        renderFeed();
+        if (document.body.dataset.page === "index") {
+          // Agregar el nuevo pensamiento al feed directamente
+          feedList.unshift(thought);
+          buildIndex(feedList);
+          const feed = $("#feed");
+          if (feed && !composerParentId) { // Solo para pensamientos principales
+            feed.insertBefore(thoughtNode(thought), feed.querySelector(".thought"));
+          } else if (feed && composerParentId) { // Para respuestas
+            const parentLi = feed.querySelector(`li[data-id="${composerParentId}"]`);
+            if (parentLi) {
+              let children = parentLi.querySelector(".children");
+              if (!children) {
+                children = document.createElement("ul");
+                children.className = "children";
+                children.setAttribute("role", "group");
+                parentLi.appendChild(children);
+                // Agregar botón de colapsar
+                const actions = parentLi.querySelector(".actions");
+                const collapseBtn = document.createElement("button");
+                collapseBtn.className = "action small";
+                collapseBtn.dataset.action = "collapse-toggle";
+                collapseBtn.setAttribute("aria-label", "Colapsar hilo");
+                collapseBtn.textContent = "Colapsar hilo";
+                actions.appendChild(collapseBtn);
+              }
+              children.classList.remove("collapsed");
+              parentLi.setAttribute("aria-expanded", "true");
+              children.appendChild(thoughtNode(thought));
+            }
+          }
+        }
       });
       $("#composerInput").addEventListener("input", (e) => {
-        const v = e.target.value.slice(0, 500);
-        $("#charCount").textContent = v.length + "/500";
+        const maxLength = isTrashComposer ? 100 : 500;
+        const v = e.target.value.slice(0, maxLength);
+        $("#charCount").textContent = `${v.length}/${maxLength}`;
         $("#composerSubmit").disabled = v.trim().length === 0;
       });
     }
   };
 
   const initIndex = async () => {
+    feedSkip = 0;
+    feedDone = false;
+    feedLoading = false;
+    feedList = [];
     await renderFeed();
     const feed = $("#feed");
     if (!feed) return;
@@ -259,6 +324,17 @@
           "aria-label",
           isCollapsed ? "Expandir hilo" : "Colapsar hilo"
         );
+      }
+    });
+
+    // Scroll infinito
+    window.addEventListener("scroll", async () => {
+      if (feedLoading || feedDone) return;
+      const scrollY = window.scrollY || window.pageYOffset;
+      const viewport = window.innerHeight;
+      const fullHeight = document.body.offsetHeight;
+      if (fullHeight - (scrollY + viewport) < 300) {
+        await renderFeed();
       }
     });
   };
@@ -374,6 +450,44 @@
     });
   };
 
+  const initWalls = async () => {
+    const wallList = $("#wallList");
+    const newWallInput = $("#newWallInput");
+    const addWallBtn = $("#addWallBtn");
+
+    const renderWalls = async () => {
+      const walls = await Storage.getWalls();
+      wallList.innerHTML = "";
+      walls.forEach(wall => {
+        const li = document.createElement("li");
+        li.className = "wall-card";
+        li.textContent = wall.name;
+        li.addEventListener("click", () => {
+          window.location.href = `index.html?wallId=${wall.id}`;
+        });
+        wallList.appendChild(li);
+      });
+    };
+
+    async function createWallIfValid() {
+      const wallName = newWallInput.value.trim();
+      if (wallName) {
+        await Storage.createWall(wallName);
+        newWallInput.value = "";
+        renderWalls();
+      }
+    }
+    addWallBtn.addEventListener("click", createWallIfValid);
+    newWallInput.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        await createWallIfValid();
+      }
+    });
+
+    renderWalls();
+  };
+
   // Entrypoint
   document.addEventListener("DOMContentLoaded", async () => {
     await initCommon();
@@ -383,6 +497,10 @@
       if (e.target.closest("[data-open-composer]")) {
         e.preventDefault();
         openComposer();
+      }
+      if (e.target.closest("[data-open-trash-composer]")) {
+        e.preventDefault();
+        openComposer(null, true);
       }
     });
 
@@ -400,5 +518,6 @@
     if (page === "index") await initIndex();
     if (page === "search") await initSearch();
     if (page === "profile") await initProfile();
+    if (page === "walls") await initWalls();
   });
 })();

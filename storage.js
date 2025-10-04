@@ -101,12 +101,14 @@
     },
 
     /** Crea un pensamiento (root o reply) */
-    async create(content, parentId = null) {
+    async create(content, parentId = null, isTrash = false, wallId = 'main') {
       const t = {
         id: id(),
         parentId: parentId ?? null,
         content: String(content),
         createdAt: Date.now(),
+        isTrash: isTrash,
+        wallId: wallId
       };
       cache.push(t);
       writeJSON(THOUGHTS_KEY, cache);
@@ -126,6 +128,7 @@
 
     /** Inicialización (si está vacío, siembra datos) */
     async init() {
+      seedIfEmpty();
       ensureProfile();
     },
 

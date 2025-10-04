@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wall's - Thoughts</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">
+    <link rel="manifest" href="images/favicon/site.webmanifest">
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+</head>
+
+<body data-page="walls">
+    <aside class="sidebar" aria-label="Navegación principal">
+        <div class="logo">
+            <a href="index.html" aria-label="Ir a inicio"><img src="images/th_logo.png" alt="Thoughts logo"></a>
+        </div>
+        <nav class="nav">
+            <a href="index.html" class="nav-btn" aria-label="Inicio" title="Inicio">
+                <i class="ti ti-brand-google-home"></i>
+            </a>
+            <a href="search.html" class="nav-btn" aria-label="Buscar" title="Buscar">
+                <i class="ti ti-search"></i>
+            </a>
+            <a href="profile.html" class="nav-btn" aria-label="Perfil" title="Perfil">
+                <i class="ti ti-user-circle"></i>
+            </a>
+            <a href="walls.html" class="nav-btn is-active" aria-label="Muros" title="Muros">
+                <i class="ti ti-wall"></i>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <section>
+            <h1 class="h3">Muros</h1>
+            <div class="wall-actions">
+                <input id="newWallInput" type="text" placeholder="Nuevo muro..." />
+                <button id="addWallBtn" class="primary">Crear</button>
+            </div>
+            <ul id="wallList" class="wall-list"></ul>
+        </section>
+    </main>
+
+    <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
+
+    <script src="storage-api.js"></script>
+    <script src="app.js"></script>
+
+</body>
+
+</html>
