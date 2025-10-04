@@ -249,11 +249,39 @@
         const maxLength = isTrashComposer ? 100 : 500;
         const content = escapeHtml(raw).slice(0, maxLength);
         if (!content) return;
-        await Storage.create(content, composerParentId, isTrashComposer, currentWallId);
+        const thought = await Storage.create(content, composerParentId, isTrashComposer, currentWallId);
         closeComposer();
         showToast("¡Publicado!");
         if (document.body.dataset.page === "index") {
-          renderFeed();
+          // Agregar el nuevo pensamiento al feed directamente
+          feedList.unshift(thought);
+          buildIndex(feedList);
+          const feed = $("#feed");
+          if (feed && !composerParentId) { // Solo para pensamientos principales
+            feed.insertBefore(thoughtNode(thought), feed.querySelector(".thought"));
+          } else if (feed && composerParentId) { // Para respuestas
+            const parentLi = feed.querySelector(`li[data-id="${composerParentId}"]`);
+            if (parentLi) {
+              let children = parentLi.querySelector(".children");
+              if (!children) {
+                children = document.createElement("ul");
+                children.className = "children";
+                children.setAttribute("role", "group");
+                parentLi.appendChild(children);
+                // Agregar botón de colapsar
+                const actions = parentLi.querySelector(".actions");
+                const collapseBtn = document.createElement("button");
+                collapseBtn.className = "action small";
+                collapseBtn.dataset.action = "collapse-toggle";
+                collapseBtn.setAttribute("aria-label", "Colapsar hilo");
+                collapseBtn.textContent = "Colapsar hilo";
+                actions.appendChild(collapseBtn);
+              }
+              children.classList.remove("collapsed");
+              parentLi.setAttribute("aria-expanded", "true");
+              children.appendChild(thoughtNode(thought));
+            }
+          }
         }
       });
       $("#composerInput").addEventListener("input", (e) => {
@@ -441,12 +469,19 @@
       });
     };
 
-    addWallBtn.addEventListener("click", async () => {
+    async function createWallIfValid() {
       const wallName = newWallInput.value.trim();
       if (wallName) {
         await Storage.createWall(wallName);
         newWallInput.value = "";
         renderWalls();
+      }
+    }
+    addWallBtn.addEventListener("click", createWallIfValid);
+    newWallInput.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        await createWallIfValid();
       }
     });
 
