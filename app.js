@@ -51,6 +51,12 @@
   let byParent = new Map(); // parentId -> Thought[]
   let profile = null;
   let currentWallId = 'main';
+  // Scroll infinito
+  let feedSkip = 0;
+  const feedLimit = 30;
+  let feedLoading = false;
+  let feedDone = false;
+  let feedList = [];
 
   // Render helpers
   const buildIndex = (list) => {
@@ -141,29 +147,43 @@
   };
 
   const renderFeed = async () => {
-    const list = await Storage.loadAll(currentWallId);
-    buildIndex(list);
+    if (feedLoading || feedDone) return;
+    feedLoading = true;
+    const feed = $("#feed");
+    if (!feed) return;
+    if (feedSkip === 0) {
+      feed.innerHTML = "";
+      feedList = [];
+      feedDone = false;
+      // Composer card solo al inicio
+      const composerCard = document.createElement("li");
+      composerCard.className = "card composer-prompt";
+      composerCard.setAttribute("data-open-composer", "");
+      composerCard.innerHTML = `
+        <span class="avatar"></span>
+        <span class="placeholder">En que estas pensando....?</span>
+        <button class="primary">Publicar</button>
+      `;
+      ensureAvatar(composerCard.querySelector(".avatar"));
+      feed.appendChild(composerCard);
+    }
+    // Cargar lote
+    const list = await Storage.loadAll(currentWallId, feedLimit, feedSkip);
+    if (list.length < feedLimit) feedDone = true;
+    feedSkip += list.length;
+    feedList = feedList.concat(list);
+    buildIndex(feedList);
     const roots = (byParent.get(null) || [])
       .slice()
       .sort((a, b) => b.createdAt - a.createdAt);
-    const feed = $("#feed");
-    if (!feed) return;
-    feed.innerHTML = "";
-
-    const composerCard = document.createElement("li");
-    composerCard.className = "card composer-prompt";
-    composerCard.setAttribute("data-open-composer", "");
-    composerCard.innerHTML = `
-      <span class="avatar"></span>
-      <span class="placeholder">En que estas pensando....?</span>
-      <button class="primary">Publicar</button>
-    `;
-    ensureAvatar(composerCard.querySelector(".avatar"));
-    feed.appendChild(composerCard);
-
+    // Evitar duplicados
+    const renderedIds = new Set(Array.from(feed.querySelectorAll("li.thought")).map(li => li.dataset.id));
     for (const r of roots) {
-      feed.appendChild(thoughtNode(r));
+      if (!renderedIds.has(r.id)) {
+        feed.appendChild(thoughtNode(r));
+      }
     }
+    feedLoading = false;
   };
 
   let composerParentId = null;
@@ -246,6 +266,10 @@
   };
 
   const initIndex = async () => {
+    feedSkip = 0;
+    feedDone = false;
+    feedLoading = false;
+    feedList = [];
     await renderFeed();
     const feed = $("#feed");
     if (!feed) return;
@@ -272,6 +296,17 @@
           "aria-label",
           isCollapsed ? "Expandir hilo" : "Colapsar hilo"
         );
+      }
+    });
+
+    // Scroll infinito
+    window.addEventListener("scroll", async () => {
+      if (feedLoading || feedDone) return;
+      const scrollY = window.scrollY || window.pageYOffset;
+      const viewport = window.innerHeight;
+      const fullHeight = document.body.offsetHeight;
+      if (fullHeight - (scrollY + viewport) < 300) {
+        await renderFeed();
       }
     });
   };

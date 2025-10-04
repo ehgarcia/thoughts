@@ -4,7 +4,13 @@
 
   const Storage = {
     async loadAll(wallId = 'main') {
-      const res = await fetch(`${API_URL}/thoughts?wallId=${wallId}`);
+      let url = `${API_URL}/thoughts?wallId=${wallId}`;
+      if (arguments.length > 1) {
+        const limit = arguments[1] ?? 50;
+        const skip = arguments[2] ?? 0;
+        url += `&limit=${limit}&skip=${skip}`;
+      }
+      const res = await fetch(url);
       return res.json();
     },
 
@@ -42,7 +48,13 @@
     },
 
     async getWalls() {
-      const res = await fetch(`${API_URL}/walls`);
+      let url = `${API_URL}/walls`;
+      if (arguments.length > 0) {
+        const limit = arguments[0] ?? 50;
+        const skip = arguments[1] ?? 0;
+        url += `?limit=${limit}&skip=${skip}`;
+      }
+      const res = await fetch(url);
       return res.json();
     },
 

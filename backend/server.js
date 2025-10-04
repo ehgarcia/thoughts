@@ -49,10 +49,16 @@ run();
 
 // --- API para Thoughts ---
 app.get('/api/thoughts', async (req, res) => {
-    const { wallId = 'main' } = req.query;
-    const thoughts = await thoughtsCollection.find({ wallId, isTrash: { $ne: true } }).toArray();
+    const { wallId = 'main', limit = 50, skip = 0 } = req.query;
+    const lim = Math.max(1, Math.min(parseInt(limit), 100)); // máximo 100
+    const sk = Math.max(0, parseInt(skip));
+    const thoughts = await thoughtsCollection
+        .find({ wallId, isTrash: { $ne: true } })
+        .skip(sk)
+        .limit(lim)
+        .toArray();
     // Mapeamos el _id a id para cada "thought"
-    res.json(thoughts.map(mapMongoId)); // <-- CAMBIO
+    res.json(thoughts.map(mapMongoId));
 });
 
 app.post('/api/thoughts', async (req, res) => {
@@ -86,7 +92,13 @@ app.post('/api/profile', async (req, res) => {
 
 // --- API para Muros ---
 app.get('/api/walls', async (req, res) => {
-    const walls = await wallsCollection.find({}).toArray();
+    const { limit = 50, skip = 0 } = req.query;
+    const lim = Math.max(1, Math.min(parseInt(limit), 100));
+    const sk = Math.max(0, parseInt(skip));
+    const walls = await wallsCollection.find({})
+        .skip(sk)
+        .limit(lim)
+        .toArray();
     res.json(walls.map(mapMongoId));
 });
 
